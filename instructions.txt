@@ -1,0 +1,213 @@
+
+Points to be covered.
+
+	1- Instructions to run the network game play of the project.
+	
+	2- What is a server ?
+	
+	3- What is a server socket ?
+	
+	4- How two devices are connected together ?
+
+	5- What happens during the game play between the two players.
+
+	6- GameServer Class.
+
+	7- GameClient Class.
+
+	8- Summary.
+
+=====================================================================================================================================================================
+
+* Very Important note : Please use the mouse clicks to move the champions not the keyboard,
+Click on the button that you want the champion to move to.
+
+
+1- Instructions to run the network of the game.
+
+	1- First of all run class GameServer.
+	
+	2- Second run an instance of class Controller which will represent the first user to connect.
+	
+	3- Third run the second instance of class Controller which will represent the second user to connect. 
+	
+	4- For user 1 at the first stage after typing the name in the first jtext field click on button "done typing" so it appears for the second user.
+	
+	5- For user 2 at the first stage after typing the name in the second jtext field click on button "done typing" so it appears for the first user.
+	
+	6- When both users enter their names each one should click start together.
+	
+	7- Selecting Champions from any user will reflect the same action for the other user and vice versa.
+	
+	8- Any action done by any user will be done in the engine of the other user and vice versa.
+	
+	9- The idea of putting the covers in random cells cannot be done in the network play mode as each user runs a new instance of the game so the covers locations
+	will be different for both users so we create covers with fixed locations only for our case as a network play mode.
+	
+	10- Running only one instance of class controller will result into exceptions because this project is the modified one of M3 in order to play it on a network.
+
+=====================================================================================================================================================================
+
+2- What is a server ? (Briefly explained)
+	
+	A server is a computer that allows the users to communicate with each other by sending and recieving 
+signals from both users also it is a computer program or device that provides a service to another computer 
+program and its user, also known as the client.A server can be a physical device or an implemented software in our case for the
+network play mode. In other words it can be a class which we implemented in the class GameServer found in 
+package views.
+
+=====================================================================================================================================================================
+
+3- What is a socket ? (Briefly explained)
+
+	Sockets are commonly used for client and server interaction. Typical system configuration places the 
+server on one machine, with the clients on other machines. The clients connect to the server, exchange 
+information, and then disconnect. A socket has a typical flow of events. In a connection-oriented 
+client-to-server model, the socket on the server process waits for requests from a client. 
+
+=====================================================================================================================================================================
+
+4 - How two devices are connected together ? (Note that what is expplained here is based on the explannation of class GameServer and GameClient )
+
+	In our modified version of the game we implemented a network connection which allows two users/players
+to play and interact together, we implemented such a network using the server and client connection,
+The server is the link between the two clients/players, What we had to do is two clients client1 and
+client2 each one of them should be able to run the game and be connected to the other client, What happens is
+client1 runs the game and immediately that client is linked to the server that has the same port number in our case the
+port number is 6436, after client1 is connected to the server then that client has to wait for client2 to connect to
+the server by the same way, After both of them connect to the server they become connected together
+but not directly in fact they have a link that manages the interaction between them which is the server.
+
+=====================================================================================================================================================================
+
+5- What happens between the two players during the game ? 
+
+	Whenever client1 does an action in the game which can be selecting champions or move or attack....etc
+then that behaviour should be reflected to the game of client2 and vice versa. For example, client1 and client2
+are playing against each other and client1 in his game window chose to move Captain America then at his game
+window he will see Captain America's photo moving on the board as well as seeing his action points changing on the 
+text area holding his data, That action should also be done for client2's game, How is that going to happen ?
+here comes the job of the implemented server, when calling method .move() from Action Performed method in class controller of client1 we 
+immediately call a method that sends a message to the server as a string describing the action taken by client1 
+then the server sends the received message to client2 so this message is caught by the method applyAction(String action) which decodes
+that message and depending on what is written using the if conditions it calls the same method .move() in class game but for the client
+who received that message by calling the method applyAction(String action) which is found in class GameClient.
+
+Code Example 1
+
+	In our code after calling the method model.attack(Direction.RIGHT) the method  client.writeToServer("aRIGHT")
+is called with the string "aRIGHT" so it sends that string to the server then that server sends it to client2.
+That string works as a key for client2 , Depending on that string a specific method with specific parameters
+will be executed. in this case "aRIGHT" 'a' means attack "RIGHT" means Direction.RIGHT so the the model of client2 
+will call the method attack(Direction.RIGHT) as well so client2 will notice the same action done by client1 
+
+Code Example 2
+ 
+	After calling method castAbility(Ability a, int x, int y) in this case we need to send a string that contains
+the name of the casted ability because we can only send strings to the server we can't send the ability reference
+because the two devices have different references for the ability even if the abilities contents are identical.
+So we send the name of the casted ability as well as the x and the y but as a string containing all of them
+so we call client.writeToServer( "3" +x +"" +y +castedAbility.getName() )
+So inside method applyAction using the if conditions '3' means castAbility of the third type castAbility(Ability a, int x, int y)
+then 'x' represents the x target but as string as well as 'y' so we convert them into integers then
+we search for the ability with the same name of castedAbility.getName() thus it will be the ability to be executed 
+
+Here you can find all the method calling along side with their messages to be sent to the server
+
+client.writeToServer("n1"+playerOneName) --> Change the text for playerOneName text area
+client.writeToServer("n2"+playerTwoName) --> Change the text for playeTwoName text area
+client.writeToServer("s"+index) --> select the clicked champion who has index "index" in the availableChampions ArrayList
+client.writeToServer("lf"+index) --> set the leader of the first player to be the champion who has index "index" in the availableChampions ArrayList
+client.writeToServer("ls"+index) --> set the leader of the second player to be the champion who has index "index" in the availableChampions ArrayList
+
+client.writeToServer("endTurn") --> call the method endTurn()
+client.writeToServer("ula") --> call method useLeaderAbility()
+
+client.writeToServer("mDOWN") --> call method .move(Direction.DOWN)
+client.writeToServer("mUP") --> call method .move(Direction.UP)
+client.writeToServer("mRIGHT") --> call method .move(Direction.RIGHT)
+client.writeToServer("mLEFT") --> call method .move(Direction.LEFT)
+
+client.writeToServer("aUP") --> call method attack(Direction.UP)
+client.writeToServer("aDOWN") --> call method attack(Direction.DOWN)
+client.writeToServer("aLEFT") --> call method attack(Direction.LEFT)
+client.writeToServer("aRIGHT") --> call method attack(Direction.RIGHT)
+
+client.writeToServer("1"+castedAbility.getName()) --> call method castAbility(Ability a)
+client.writeToServer("2"+direction.toString().charAt(0)+castedAbility.getName()) --> call method castAbility(Ability a , Direction d)
+client.writeToServer("3"+xServer+yServer+castedAbility.getName()) --> call method castAbility(Ability a , int x , int y)
+
+Note : the first character of the string determines which method will be called and the rest of the string 
+determine which parameters to be passed to the method. 
+
+=====================================================================================================================================================================
+
+6- Class GameServer.
+
+	That class acts as the server of the game which connects both players together.
+whenever calling an instance of that server it opens a socket for users to join and connect together by
+reaching the distinct port number that is passed to the constructor of it's ServerSocket in this case it is 6436.
+
+That class has a method and an inner class.
+
+The method is acceptConnection() :-
+
+	it keeps accepting users connection requests by initialising a socket that is coming from the ServerSocket
+attribute when calling the .accept() method then it allows inputs and outputs ways by BufferedReader 
+and DataOutputStream which will allow GameClients to be initiated.
+	
+The inner class is the Client class which will be initialised whenever a user wishes to connect to the server.
+Each Client object has a distinct id,Socket,input output streams as well as an ActionReader that will detect
+the actions and that ActionReader is an inner class which is described below
+
+Class ActionReader.
+ 
+	A class that extends the Thread which will allow receiving all actions delivered to the Client 
+by overriding the method .run() that keeps reading actions hence executing multiple processes
+running concurrently by the operating system.
+
+A method writeToOtherClient(Long id,String action) that writes the action to the affected users and it 
+specifies which users that the action reflected by the server will affect and each affected user will receive
+the action by invoking method writeToClient(String action) on that user. so our program allows multiple users
+to play the game not only two but in our Marvel game we will be only two.
+
+=====================================================================================================================================================================
+
+7- Class GameClient.
+
+	That class will represent any Client that wants to join the game and connect to the server.
+inside the constructor of that class a Socket instance is created with 2 parameters first is the host which
+will be "localhost" because we create the network on our device as we do not have an actual server device so the host is the pc, second is
+the port number which is the same as the one in class GameServer the ServerSocket(6436) in order to connect to that server 
+this number in our case is 6436.
+
+It has a method writeToServer(String action) which sends the message describing the action done by that
+GameClient to the server then the server orders the other client to apply that action, It is the method used in class Controller after calling the game 
+methods in order to reflect the action to the other client by the server as explained before.
+
+A method applyAction(String action):-
+
+	It is the method that applies the action coming from the server to the target client depending on the String
+action which holds the instruction to be done as explained before.
+
+An inner class ActionReader that does the following
+it extends Thread to be able to run multiple processes concurrently
+it keeps reading action Strings from the BufferedReader attribute and each action is passed to applyAction(String action)
+in order to execute the logic of that action.
+
+=====================================================================================================================================================================
+
+8- Summary.
+
+	Two players can be connected together and play against each other by being linked to a small software called server
+which plays the role of the link or the instructor, Any action taken by a player will result into sending a message
+to the server as a string. Then the server will send that message to the other player thus the method applyAction(String action) 
+will decode the instruction string using if conditions hence the appropriate method with the appropriate parameters will 
+be called which will lead to reflecting the same action done by a player to the other player.
+
+Last but not least, You can refer back to the code while reading the document to understand more about what is implemented.
+Thank you so much.
+
+=====================================================================================================================================================================
+
+
